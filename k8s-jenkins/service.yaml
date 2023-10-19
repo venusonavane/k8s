@@ -1,0 +1,48 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jenkins-admin
+rules:
+  - apiGroups: [""]
+    resources: ["*"]
+    verbs: ["*"]
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins-admin
+  namespace: devops-tools
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jenkins-admin
+subjects:
+- kind: ServiceAccount
+  name: jenkins-admin
+  namespace: devops-tools
+venu33@venu-test:~/kubernetes-jenkins$ cat service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-service
+  namespace: devops-tools
+  annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/path:   /
+      prometheus.io/port:   '8080'
+spec:
+  selector:
+    app: jenkins-server
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 32001
