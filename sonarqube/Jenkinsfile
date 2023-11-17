@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+    
+    environment {
+        NAMESPACE = "default"   //edit it as per your.
+        DESIRED_PVC = "sonar-pvc"
+    }
+
+    stages {
+        
+        stage('Git Clone') {
+
+            steps {
+
+               git branch: 'main', url: 'http://10.248.156.31:8081/root/k8s.git'
+
+            }
+        }
+
+        stage('Deploy PostgreSQL') {
+            steps {
+                dir('sonarqube') {
+                    sh "k apply -f postgres-app.yaml -n $NAMESPACE"
+                    sh "k apply -f postgres-pvc.yaml -n $NAMESPACE"
+                }
+            }
+        }
+        
+        stage('Deploy SonarQube') {
+            steps {
+                dir('sonarqube') {
+                    sh "k apply -f sonar-app.yaml -n $NAMESPACE"
+                    sh "k apply -f sonar-pvc.yaml -n $NAMESPACE"
+                }
+            }
+        }
+        
+    }   
+    
+        post {
+        success {
+            echo "Pipeline executed successfully"
+        }
+        failure {
+            echo "Pipeline failed. Please investigate and take necessary actions."
+        }
+        }
+
+}
